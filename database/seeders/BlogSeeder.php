@@ -1,0 +1,148 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Blog;
+use Illuminate\Database\Seeder;
+
+class BlogSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $blogs = [
+            [
+                'title' => 'Introduction to Laravel',
+                'title_bn' => 'লারাভেল পরিচিতি',
+                'excerpt' => 'Learn the basics of Laravel framework and how to get started with modern PHP development.',
+                'excerpt_bn' => 'লারাভেল ফ্রেমওয়ার্কের মূল বিষয়গুলি এবং আধুনিক PHP ডেভেলপমেন্ট শুরু করার উপায় শিখুন।',
+                'content' => 'Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects...',
+                'content_bn' => 'লারাভেল একটি ওয়েব অ্যাপ্লিকেশন ফ্রেমওয়ার্ক যা প্রকাশক এবং মার্জিত সিনট্যাক্স সহ আসে। আমরা বিশ্বাস করি যে ডেভেলপমেন্ট অবশ্যই একটি আনন্দদায়ক এবং সৃজনশীল অভিজ্ঞতা হতে হবে...',
+                'author' => 'John Doe',
+                'author_bn' => 'জন ডো',
+                'category' => 'Web Development',
+                'category_bn' => 'ওয়েব ডেভেলপমেন্ট',
+                'tags' => ['Laravel', 'PHP', 'Framework'],
+                'tags_bn' => ['লারাভেল', 'পিএইচপি', 'ফ্রেমওয়ার্ক'],
+                'read_time' => '8 min read',
+                'read_time_bn' => '৮ মিনিট পড়ুন',
+                'image_url' => 'https://picsum.photos/800/400?random=1',
+                'slug' => 'introduction-to-laravel',
+                'status' => 'published',
+                'views' => 1234,
+                'published_at' => now()->subDays(5),
+            ],
+            [
+                'title' => 'Getting Started with React',
+                'title_bn' => 'রিঅ্যাক্ট দিয়ে শুরু করা',
+                'excerpt' => 'A comprehensive guide to understanding React and building modern user interfaces.',
+                'excerpt_bn' => 'রিঅ্যাক্ট বোঝার এবং আধুনিক ইউজার ইন্টারফেস তৈরি করার জন্য একটি বিস্তৃত গাইড।',
+                'content' => 'React is a JavaScript library for building user interfaces. It is maintained by Facebook and a community of individual developers and companies. React can be used as a base in the development of single-page or mobile applications...',
+                'content_bn' => 'রিঅ্যাক্ট হল ইউজার ইন্টারফেস তৈরির জন্য একটি জাভাস্ক্রিপ্ট লাইব্রেরি। এটি ফেসবুক এবং স্বতন্ত্র ডেভেলপার এবং কোম্পানিগুলির একটি সম্প্রদায় দ্বারা রক্ষণাবেক্ষণ করা হয়...',
+                'author' => 'Jane Smith',
+                'author_bn' => 'জেন স্মিথ',
+                'category' => 'Frontend Development',
+                'category_bn' => 'ফ্রন্টএন্ড ডেভেলপমেন্ট',
+                'tags' => ['React', 'JavaScript', 'Frontend'],
+                'tags_bn' => ['রিঅ্যাক্ট', 'জাভাস্ক্রিপ্ট', 'ফ্রন্টএন্ড'],
+                'read_time' => '10 min read',
+                'read_time_bn' => '১০ মিনিট পড়ুন',
+                'image_url' => 'https://picsum.photos/800/400?random=2',
+                'slug' => 'getting-started-with-react',
+                'status' => 'published',
+                'views' => 2156,
+                'published_at' => now()->subDays(3),
+            ],
+            [
+                'title' => 'Database Design Best Practices',
+                'title_bn' => 'ডাটাবেস ডিজাইনের সেরা অনুশীলন',
+                'excerpt' => 'Essential principles for designing efficient and scalable database schemas.',
+                'excerpt_bn' => 'দক্ষ এবং স্কেলেবল ডাটাবেস স্কিমা ডিজাইন করার জন্য প্রয়োজনীয় নীতিগুলি।',
+                'content' => 'Proper database design is crucial for building scalable applications. This guide covers normalization, indexing, relationships, and more...',
+                'content_bn' => 'স্কেলেবল অ্যাপ্লিকেশন তৈরির জন্য সঠিক ডাটাবেস ডিজাইন অত্যন্ত গুরুত্বপূর্ণ। এই গাইডে নরমালাইজেশন, ইন্ডেক্সিং, সম্পর্ক এবং আরও অনেক কিছু রয়েছে...',
+                'author' => 'Mike Johnson',
+                'author_bn' => 'মাইক জনসন',
+                'category' => 'Database',
+                'category_bn' => 'ডাটাবেস',
+                'tags' => ['Database', 'SQL', 'Design'],
+                'tags_bn' => ['ডাটাবেস', 'এসকিউএল', 'ডিজাইন'],
+                'read_time' => '12 min read',
+                'read_time_bn' => '১২ মিনিট পড়ুন',
+                'image_url' => 'https://picsum.photos/800/400?random=3',
+                'slug' => 'database-design-best-practices',
+                'status' => 'published',
+                'views' => 987,
+                'published_at' => now()->subDays(7),
+            ],
+            [
+                'title' => 'Understanding REST APIs',
+                'title_bn' => 'REST API বোঝা',
+                'excerpt' => 'Deep dive into RESTful API design principles and implementation.',
+                'excerpt_bn' => 'RESTful API ডিজাইন নীতি এবং বাস্তবায়নের গভীর পর্যালোচনা।',
+                'content' => 'REST (Representational State Transfer) is an architectural style for designing networked applications...',
+                'content_bn' => 'REST (প্রতিনিধিত্বমূলক স্টেট ট্রান্সফার) হল নেটওয়ার্ক অ্যাপ্লিকেশন ডিজাইন করার জন্য একটি স্থাপত্য শৈলী...',
+                'author' => 'Sarah Williams',
+                'author_bn' => 'সারাহ উইলিয়ামস',
+                'category' => 'API Development',
+                'category_bn' => 'এপিআই ডেভেলপমেন্ট',
+                'tags' => ['REST', 'API', 'Backend'],
+                'tags_bn' => ['রেস্ট', 'এপিআই', 'ব্যাকএন্ড'],
+                'read_time' => '15 min read',
+                'read_time_bn' => '১৫ মিনিট পড়ুন',
+                'image_url' => 'https://picsum.photos/800/400?random=4',
+                'slug' => 'understanding-rest-apis',
+                'status' => 'published',
+                'views' => 1567,
+                'published_at' => now()->subDays(2),
+            ],
+            [
+                'title' => 'Modern CSS Techniques',
+                'title_bn' => 'আধুনিক CSS কৌশল',
+                'excerpt' => 'Explore the latest CSS features and techniques for modern web design.',
+                'excerpt_bn' => 'আধুনিক ওয়েব ডিজাইনের জন্য সর্বশেষ CSS বৈশিষ্ট্য এবং কৌশলগুলি অন্বেষণ করুন।',
+                'content' => 'CSS has evolved significantly in recent years. Learn about Flexbox, Grid, Custom Properties, and more...',
+                'content_bn' => 'সাম্প্রতিক বছরগুলিতে CSS উল্লেখযোগ্যভাবে বিকশিত হয়েছে। ফ্লেক্সবক্স, গ্রিড, কাস্টম প্রপার্টি এবং আরও অনেক কিছু সম্পর্কে জানুন...',
+                'author' => 'David Brown',
+                'author_bn' => 'ডেভিড ব্রাউন',
+                'category' => 'Frontend Development',
+                'category_bn' => 'ফ্রন্টএন্ড ডেভেলপমেন্ট',
+                'tags' => ['CSS', 'Design', 'Frontend'],
+                'tags_bn' => ['সিএসএস', 'ডিজাইন', 'ফ্রন্টএন্ড'],
+                'read_time' => '7 min read',
+                'read_time_bn' => '৭ মিনিট পড়ুন',
+                'image_url' => 'https://picsum.photos/800/400?random=5',
+                'slug' => 'modern-css-techniques',
+                'status' => 'published',
+                'views' => 1823,
+                'published_at' => now()->subDays(1),
+            ],
+            [
+                'title' => 'Draft: Future of Web Development',
+                'title_bn' => 'খসড়া: ওয়েব ডেভেলপমেন্টের ভবিষ্যৎ',
+                'excerpt' => 'Exploring upcoming trends and technologies in web development.',
+                'excerpt_bn' => 'ওয়েব ডেভেলপমেন্টে আগামী ট্রেন্ড এবং প্রযুক্তি অন্বেষণ করা।',
+                'content' => 'This is a draft article about the future of web development...',
+                'content_bn' => 'এটি ওয়েব ডেভেলপমেন্টের ভবিষ্যৎ সম্পর্কে একটি খসড়া নিবন্ধ...',
+                'author' => 'Alex Turner',
+                'author_bn' => 'অ্যালেক্স টার্নার',
+                'category' => 'Web Development',
+                'category_bn' => 'ওয়েব ডেভেলপমেন্ট',
+                'tags' => ['Future', 'Trends', 'Web'],
+                'tags_bn' => ['ভবিষ্যৎ', 'ট্রেন্ড', 'ওয়েব'],
+                'read_time' => '5 min read',
+                'read_time_bn' => '৫ মিনিট পড়ুন',
+                'image_url' => 'https://picsum.photos/800/400?random=6',
+                'slug' => 'future-of-web-development',
+                'status' => 'draft',
+                'views' => 0,
+                'published_at' => null,
+            ],
+        ];
+
+        foreach ($blogs as $blog) {
+            Blog::create($blog);
+        }
+    }
+}
