@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input, button {
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%;
+            max-width: 300px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .response {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        h2 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Laravel API Test Interface</h1>
+
+    <!-- Register Section -->
+    <div class="section">
+        <h2>Register</h2>
+        <input type="text" id="reg-name" placeholder="Name" value="John Doe">
+        <input type="email" id="reg-email" placeholder="Email" value="john@example.com">
+        <input type="password" id="reg-password" placeholder="Password" value="password123">
+        <input type="password" id="reg-password-confirm" placeholder="Confirm Password" value="password123">
+        <button onclick="register()">Register</button>
+        <div class="response" id="reg-response"></div>
+    </div>
+
+    <!-- Login Section -->
+    <div class="section">
+        <h2>Login</h2>
+        <input type="email" id="login-email" placeholder="Email" value="john@example.com">
+        <input type="password" id="login-password" placeholder="Password" value="password123">
+        <button onclick="login()">Login</button>
+        <div class="response" id="login-response"></div>
+    </div>
+
+    <!-- Get User Section -->
+    <div class="section">
+        <h2>Get Authenticated User</h2>
+        <button onclick="getUser()">Get User</button>
+        <div class="response" id="user-response"></div>
+    </div>
+
+    <!-- Logout Section -->
+    <div class="section">
+        <h2>Logout</h2>
+        <button onclick="logout()">Logout</button>
+        <div class="response" id="logout-response"></div>
+    </div>
+
+    <!-- Current Token -->
+    <div class="section">
+        <h2>Current Token</h2>
+        <div class="response" id="token-display">No token stored</div>
+        <button onclick="displayToken()">Refresh Token Display</button>
+        <button onclick="clearToken()" style="background: #dc3545;">Clear Token</button>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+
+        function displayToken() {
+            const token = localStorage.getItem('token');
+            document.getElementById('token-display').textContent = token || 'No token stored';
+        }
+
+        function clearToken() {
+            localStorage.removeItem('token');
+            displayToken();
+            alert('Token cleared!');
+        }
+
+        async function register() {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const password_confirmation = document.getElementById('reg-password-confirm').value;
+
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, password, password_confirmation }),
+                });
+
+                const data = await response.json();
+                document.getElementById('reg-response').textContent = JSON.stringify(data, null, 2);
+
+                if (response.ok && data.access_token) {
+                    localStorage.setItem('token', data.access_token);
+                    displayToken();
+                    alert('Registration successful! Token saved.');
+                }
+            } catch (error) {
+                document.getElementById('reg-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+                document.getElementById('login-response').textContent = JSON.stringify(data, null, 2);
+
+                if (response.ok && data.access_token) {
+                    localStorage.setItem('token', data.access_token);
+                    displayToken();
+                    alert('Login successful! Token saved.');
+                }
+            } catch (error) {
+                document.getElementById('login-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function getUser() {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                alert('Please login first!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/user`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                const data = await response.json();
+                document.getElementById('user-response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('user-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function logout() {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                alert('No token found!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                const data = await response.json();
+                document.getElementById('logout-response').textContent = JSON.stringify(data, null, 2);
+
+                if (response.ok) {
+                    localStorage.removeItem('token');
+                    displayToken();
+                    alert('Logout successful! Token removed.');
+                }
+            } catch (error) {
+                document.getElementById('logout-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        // Display token on page load
+        displayToken();
+    </script>
+</body>
+</html>
