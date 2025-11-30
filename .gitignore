@@ -22,3 +22,9 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Keep bootstrap/cache directory and placeholder files for Vercel
+!bootstrap/cache/
+!bootstrap/cache/.gitkeep
+!bootstrap/cache/packages.php
+!bootstrap/cache/services.php

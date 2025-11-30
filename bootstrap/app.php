@@ -4,6 +4,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
+// Use /tmp/bootstrap for cache on Vercel
+$bootstrapPath = defined('LARAVEL_BOOTSTRAP_CACHE') ? dirname(LARAVEL_BOOTSTRAP_CACHE) : __DIR__;
+
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -20,10 +23,14 @@ $app = Application::configure(basePath: dirname(__DIR__))
         //
     })->create();
 
-// Override storage paths for Vercel (read-only filesystem)
-if (isset($_ENV['VERCEL'])) {
-    $app->useStoragePath(env('APP_STORAGE', '/tmp/storage'));
-    $app->bootstrapPath('/tmp/bootstrap');
+// Override storage and bootstrap paths for Vercel
+if (isset($_ENV['VERCEL']) || isset($_ENV['APP_STORAGE'])) {
+    $app->useStoragePath($_ENV['APP_STORAGE'] ?? '/tmp/storage');
+    
+    // Override bootstrap path
+    if (defined('LARAVEL_BOOTSTRAP_CACHE')) {
+        $app->useBootstrapPath(dirname(LARAVEL_BOOTSTRAP_CACHE));
+    }
 }
 
 return $app;
