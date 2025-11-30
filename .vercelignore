@@ -1,1 +1,16 @@
 /vendor
+/node_modules
+.env
+.env.*
+!.env.production.example
+.git
+.gitignore
+.gitattributes
+storage/*.key
+.phpunit.result.cache
+phpunit.xml
+tests/
+.editorconfig
+README.md
+*.md
+!VERCEL_DEPLOYMENT.md

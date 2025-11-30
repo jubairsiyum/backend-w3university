@@ -1,19 +1,40 @@
 {
-"version": 2,
-"framework": null,
-"functions": {
-"api/index.php": { "runtime": "vercel-php@0.7.1" }
-},
-"routes": [
-{ "src": "/(.*)", "dest": "/api/index.php" }
-],
-"env": {
-"APP_ENV": "production",
-"APP_DEBUG": "false",
-"APP_URL": "https://ecbackend.vercel.app",
-"APP_KEY": "your-app-key",
-"LOG_CHANNEL": "stderr",
-"CACHE_DRIVER": "array",
-"SESSION_DRIVER": "cookie"
-}
+  "version": 2,
+  "framework": null,
+  "functions": {
+    "api/index.php": { 
+      "runtime": "vercel-php@0.7.1"
+    }
+  },
+  "routes": [
+    {
+      "src": "/(css|js|images)/(.*)",
+      "dest": "public/$1/$2"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
+    }
+  ],
+  "env": {
+    "APP_NAME": "ekusheyCoding",
+    "APP_ENV": "production",
+    "APP_DEBUG": "true",
+    "APP_URL": "https://backend-w3university.vercel.app",
+    "APP_KEY": "base64:ivzQgIx+mUnQjupf+ln0ff4IQiWfTday4VpfV9udstA=",
+    
+    "FRONTEND_URL": "http://localhost:3000",
+    
+    "LOG_CHANNEL": "stderr",
+    "LOG_LEVEL": "debug",
+    
+    "DB_CONNECTION": "mysql",
+    
+    "CACHE_DRIVER": "array",
+    "SESSION_DRIVER": "array",
+    "QUEUE_CONNECTION": "sync",
+    
+    "FILESYSTEM_DISK": "local",
+    "BROADCAST_CONNECTION": "log"
+  }
 }
