@@ -17,13 +17,17 @@
     }
   ],
   "env": {
+    "VERCEL": "1",
     "APP_NAME": "ekusheyCoding",
     "APP_ENV": "production",
     "APP_DEBUG": "true",
     "APP_URL": "https://backend-w3university.vercel.app",
     "APP_KEY": "base64:ivzQgIx+mUnQjupf+ln0ff4IQiWfTday4VpfV9udstA=",
+    "APP_STORAGE": "/tmp/storage",
+    "VIEW_COMPILED_PATH": "/tmp/storage/framework/views",
     
-    "FRONTEND_URL": "http://localhost:3000",
+    "FRONTEND_URL": "https://w3u.vercel.app",
+    "SANCTUM_STATEFUL_DOMAINS": "w3u.vercel.app,localhost:3000,localhost",
     
     "LOG_CHANNEL": "stderr",
     "LOG_LEVEL": "debug",
