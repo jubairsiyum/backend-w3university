@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -27,4 +28,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/blogs', [BlogController::class, 'store']);
     Route::put('/blogs/{slug}', [BlogController::class, 'update']);
     Route::delete('/blogs/{slug}', [BlogController::class, 'destroy']);
+});
+
+// Admin routes
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+    // Blog management
+    Route::get('/blogs', [AdminBlogController::class, 'index']);
+    Route::get('/blogs/stats', [AdminBlogController::class, 'stats']);
+    Route::get('/blogs/{id}', [AdminBlogController::class, 'show']);
+    Route::post('/blogs', [AdminBlogController::class, 'store']);
+    Route::put('/blogs/{id}', [AdminBlogController::class, 'update']);
+    Route::delete('/blogs/{id}', [AdminBlogController::class, 'destroy']);
+    Route::post('/blogs/bulk-delete', [AdminBlogController::class, 'bulkDelete']);
+    Route::post('/blogs/bulk-update-status', [AdminBlogController::class, 'bulkUpdateStatus']);
 });
