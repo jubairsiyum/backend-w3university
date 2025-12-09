@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 
 // Public routes
@@ -23,6 +24,35 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // User Profile Routes
+    Route::prefix('profile')->group(function () {
+        // Get full profile
+        Route::get('/', [ProfileController::class, 'show']);
+        
+        // Update profile information
+        Route::put('/basic-info', [ProfileController::class, 'updateBasicInfo']);
+        Route::put('/details', [ProfileController::class, 'updateProfile']);
+        Route::post('/avatar', [ProfileController::class, 'uploadAvatar']);
+        Route::post('/change-password', [ProfileController::class, 'changePassword']);
+        
+        // Favorites management
+        Route::get('/favorites', [ProfileController::class, 'getFavorites']);
+        Route::post('/favorites', [ProfileController::class, 'addFavorite']);
+        Route::put('/favorites/{id}', [ProfileController::class, 'updateFavorite']);
+        Route::delete('/favorites/{id}', [ProfileController::class, 'deleteFavorite']);
+        
+        // Activity tracking
+        Route::post('/activity', [ProfileController::class, 'trackActivity']);
+        Route::get('/activity/history', [ProfileController::class, 'getActivityHistory']);
+        
+        // Performance stats
+        Route::get('/performance', [ProfileController::class, 'getPerformance']);
+        Route::post('/badge', [ProfileController::class, 'awardBadge']);
+    });
+    
+    // Public profile view
+    Route::get('/profiles/{userId}', [ProfileController::class, 'getPublicProfile']);
     
     // Protected blog routes (for admin/authors)
     Route::post('/blogs', [BlogController::class, 'store']);

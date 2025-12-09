@@ -63,4 +63,36 @@ class User extends Authenticatable
     {
         return $this->role === 'user';
     }
+
+    /**
+     * Get the user's profile
+     */
+    public function profile()
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    /**
+     * Get the user's performance data
+     */
+    public function performance()
+    {
+        return $this->hasOne(UserPerformance::class);
+    }
+
+    /**
+     * Get the user's favorites
+     */
+    public function favorites()
+    {
+        return $this->hasMany(UserFavorite::class);
+    }
+
+    /**
+     * Get the user's activities
+     */
+    public function activities()
+    {
+        return $this->hasMany(UserActivity::class);
+    }
 }
