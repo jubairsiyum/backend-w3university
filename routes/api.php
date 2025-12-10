@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 
 // Public routes
@@ -17,6 +18,14 @@ Route::get('/blogs/popular', [BlogController::class, 'popular']);
 Route::get('/blogs/recent', [BlogController::class, 'recent']);
 Route::get('/blogs/{slug}', [BlogController::class, 'show']);
 
+// Public exercise routes
+Route::get('/exercises', [ExerciseController::class, 'index']);
+Route::get('/exercises/categories', [ExerciseController::class, 'categories']);
+Route::get('/exercises/popular', [ExerciseController::class, 'popular']);
+Route::get('/exercises/recent', [ExerciseController::class, 'recent']);
+Route::get('/exercises/difficulty/{difficulty}', [ExerciseController::class, 'byDifficulty']);
+Route::get('/exercises/{slug}', [ExerciseController::class, 'show']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -28,6 +37,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/blogs', [BlogController::class, 'store']);
     Route::put('/blogs/{slug}', [BlogController::class, 'update']);
     Route::delete('/blogs/{slug}', [BlogController::class, 'destroy']);
+    
+    // Protected exercise routes (for admin/authors)
+    Route::post('/exercises', [ExerciseController::class, 'store']);
+    Route::put('/exercises/{slug}', [ExerciseController::class, 'update']);
+    Route::delete('/exercises/{slug}', [ExerciseController::class, 'destroy']);
+    Route::post('/exercises/{slug}/complete', [ExerciseController::class, 'complete']);
 });
 
 // Admin routes
