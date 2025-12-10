@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -20,13 +21,14 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        $token = Str::random(60);
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'api_token' => hash('sha256', $token),
         ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'User registered successfully',
@@ -54,10 +56,10 @@ class AuthController extends Controller
             ]);
         }
 
-        // Delete old tokens
-        $user->tokens()->delete();
-
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Generate new token
+        $token = Str::random(60);
+        $user->api_token = hash('sha256', $token);
+        $user->save();
 
         return response()->json([
             'message' => 'Login successful',
@@ -72,7 +74,9 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->api_token = null;
+        $user->save();
 
         return response()->json([
             'message' => 'Logged out successfully',

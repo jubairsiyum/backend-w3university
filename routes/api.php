@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
-use App\Http\Controllers\ExerciseController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 
 // Public routes
@@ -27,7 +27,7 @@ Route::get('/exercises/difficulty/{difficulty}', [ExerciseController::class, 'by
 Route::get('/exercises/{slug}', [ExerciseController::class, 'show']);
 
 // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:api')->group(function () {
     Route::get('/user', [ProfileController::class, 'show']);
     Route::post('/logout', [AuthController::class, 'logout']);
     
@@ -65,7 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Admin routes
-Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth:api', 'admin'])->group(function () {
     // Blog management
     Route::get('/blogs', [AdminBlogController::class, 'index']);
     Route::get('/blogs/stats', [AdminBlogController::class, 'stats']);

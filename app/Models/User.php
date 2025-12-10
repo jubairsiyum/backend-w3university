@@ -22,6 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'api_token',
+        'role',
         'username',
         'phone',
         'bio',
@@ -52,6 +54,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'api_token',
     ];
 
     /**
@@ -87,5 +90,13 @@ class User extends Authenticatable
     public function activities()
     {
         return $this->hasMany(\App\Models\Activity::class);
+    }
+
+    /**
+     * Check if user is an admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }
