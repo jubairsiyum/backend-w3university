@@ -2,38 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\UserProfile;
-use App\Models\UserFavorite;
-use App\Models\UserActivity;
-use App\Models\UserPerformance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
     /**
-     * Get authenticated user's complete profile
+     * Get user profile
      */
     public function show(Request $request)
     {
         $user = $request->user();
-        
-        // Load all relationships
-        $user->load(['profile', 'performance', 'favorites', 'activities']);
-        
-        // Calculate additional stats
-        $recentActivities = $user->activities()
-            ->where('activity_date', '>=', Carbon::now()->subDays(30))
-            ->orderBy('activity_date', 'desc')
-            ->get();
-        
-        $todayActivity = $user->activities()
-            ->whereDate('activity_date', Carbon::today())
-            ->first();
         
         return response()->json([
             'success' => true,
@@ -42,129 +22,112 @@ class ProfileController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'role' => $user->role,
+                    'email_verified_at' => $user->email_verified_at,
                     'created_at' => $user->created_at,
-                    'last_login_at' => $user->last_login_at ?? null,
+                    'updated_at' => $user->updated_at,
                 ],
-                'profile' => $user->profile,
-                'performance' => $user->performance,
-                'favorites' => $user->favorites,
-                'recent_activities' => $recentActivities,
-                'today_activity' => $todayActivity,
+                'profile' => [
+                    'username' => $user->username ?? null,
+                    'phone' => $user->phone ?? null,
+                    'bio' => $user->bio ?? null,
+                    'avatar' => $user->avatar ?? null,
+                    'github_url' => $user->github_url ?? null,
+                    'linkedin_url' => $user->linkedin_url ?? null,
+                    'twitter_url' => $user->twitter_url ?? null,
+                    'portfolio_url' => $user->portfolio_url ?? null,
+                    'location' => $user->location ?? null,
+                    'timezone' => $user->timezone ?? null,
+                    'date_of_birth' => $user->date_of_birth ?? null,
+                    'skill_level' => $user->skill_level ?? 'beginner',
+                    'programming_languages' => $user->programming_languages ?? [],
+                    'interests' => $user->interests ?? [],
+                    'daily_goal_minutes' => $user->daily_goal_minutes ?? 0,
+                    'email_notifications' => $user->email_notifications ?? true,
+                    'is_public' => $user->is_public ?? true,
+                ],
                 'stats' => [
-                    'total_favorites' => $user->favorites->count(),
-                    'active_days_last_30' => $recentActivities->count(),
-                    'total_active_minutes_last_30' => $recentActivities->sum('minutes_active'),
-                ],
-            ],
+                    'total_courses' => 0, // Add actual data when you have courses
+                    'hours_learned' => 0,
+                    'certificates_earned' => 0,
+                    'current_streak' => $user->current_streak ?? 0,
+                ]
+            ]
         ]);
     }
 
     /**
-     * Update user's basic information
+     * Update basic info (name, email)
      */
     public function updateBasicInfo(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $request->user()->id,
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $user = $request->user();
-        $user->update($request->only(['name', 'email']));
-
+        $request->user()->update($validated);
+        
         return response()->json([
-            'success' => true,
-            'message' => 'Basic information updated successfully',
-            'data' => $user,
+            'message' => 'Profile updated successfully',
+            'user' => $request->user()
         ]);
     }
 
     /**
-     * Update user's profile information
+     * Update profile details
      */
-    public function updateProfile(Request $request)
+    public function updateDetails(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'username' => 'sometimes|string|max:255|unique:user_profiles,username,' . $request->user()->id . ',user_id',
-            'phone' => 'sometimes|nullable|string|max:20',
-            'bio' => 'sometimes|nullable|string|max:1000',
-            'github_url' => 'sometimes|nullable|url|max:255',
-            'linkedin_url' => 'sometimes|nullable|url|max:255',
-            'twitter_url' => 'sometimes|nullable|url|max:255',
-            'portfolio_url' => 'sometimes|nullable|url|max:255',
-            'location' => 'sometimes|nullable|string|max:255',
+        $validated = $request->validate([
+            'username' => 'sometimes|string|max:255|unique:users,username,' . $request->user()->id,
+            'phone' => 'sometimes|string|max:20',
+            'bio' => 'sometimes|string|max:1000',
+            'github_url' => 'sometimes|url|nullable',
+            'linkedin_url' => 'sometimes|url|nullable',
+            'twitter_url' => 'sometimes|url|nullable',
+            'portfolio_url' => 'sometimes|url|nullable',
+            'location' => 'sometimes|string|max:255',
             'timezone' => 'sometimes|string|max:50',
-            'date_of_birth' => 'sometimes|nullable|date',
-            'skill_level' => 'sometimes|in:beginner,intermediate,advanced,expert',
+            'date_of_birth' => 'sometimes|date|nullable',
+            'skill_level' => 'sometimes|string|in:beginner,intermediate,advanced,expert',
             'programming_languages' => 'sometimes|array',
             'interests' => 'sometimes|array',
-            'daily_goal_minutes' => 'sometimes|integer|min:0|max:1440',
+            'daily_goal_minutes' => 'sometimes|integer|min:0',
             'email_notifications' => 'sometimes|boolean',
             'is_public' => 'sometimes|boolean',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $user = $request->user();
-        $profile = $user->profile()->firstOrCreate(['user_id' => $user->id]);
+        $request->user()->update($validated);
         
-        $profile->update($request->all());
-
         return response()->json([
-            'success' => true,
-            'message' => 'Profile updated successfully',
-            'data' => $profile,
+            'message' => 'Profile details updated successfully',
+            'user' => $request->user()
         ]);
     }
 
     /**
-     * Upload and update avatar
+     * Upload avatar
      */
     public function uploadAvatar(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+        $validated = $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         $user = $request->user();
-        $profile = $user->profile()->firstOrCreate(['user_id' => $user->id]);
 
         // Delete old avatar if exists
-        if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-            Storage::disk('public')->delete($profile->avatar);
+        if ($user->avatar && file_exists(public_path($user->avatar))) {
+            unlink(public_path($user->avatar));
         }
 
         // Store new avatar
         $avatarPath = $request->file('avatar')->store('avatars', 'public');
-        $profile->update(['avatar' => $avatarPath]);
+        $user->update(['avatar' => '/storage/' . $avatarPath]);
 
         return response()->json([
-            'success' => true,
             'message' => 'Avatar uploaded successfully',
-            'data' => [
-                'avatar_url' => Storage::url($avatarPath),
-                'avatar_path' => $avatarPath,
-            ],
+            'avatar_url' => asset('/storage/' . $avatarPath)
         ]);
     }
 
@@ -173,89 +136,69 @@ class ProfileController extends Controller
      */
     public function changePassword(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'current_password' => 'required|string',
             'new_password' => 'required|string|min:8|confirmed',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         $user = $request->user();
 
-        // Check current password
-        if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Current password is incorrect',
-            ], 401);
+        // Verify current password
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['The current password is incorrect.'],
+            ]);
         }
 
         // Update password
         $user->update([
-            'password' => Hash::make($request->new_password),
+            'password' => Hash::make($validated['new_password'])
         ]);
 
         return response()->json([
-            'success' => true,
-            'message' => 'Password changed successfully',
+            'message' => 'Password changed successfully'
         ]);
     }
 
     /**
-     * Add favorite item
-     */
-    public function addFavorite(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'type' => 'required|in:course,tutorial,blog,tool,resource',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'url' => 'nullable|url',
-            'category' => 'nullable|string|max:100',
-            'tags' => 'nullable|array',
-            'order' => 'nullable|integer',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $favorite = $request->user()->favorites()->create($request->all());
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Favorite added successfully',
-            'data' => $favorite,
-        ], 201);
-    }
-
-    /**
-     * Get all favorites
+     * Get user favorites
      */
     public function getFavorites(Request $request)
     {
         $type = $request->query('type');
         
-        $query = $request->user()->favorites()->orderBy('order', 'asc');
+        $query = $request->user()->favorites();
         
         if ($type) {
             $query->where('type', $type);
         }
-        
-        $favorites = $query->get();
+
+        $favorites = $query->orderBy('order')->get();
+
+        return response()->json($favorites);
+    }
+
+    /**
+     * Add favorite
+     */
+    public function addFavorite(Request $request)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:course,tutorial,blog,tool,resource',
+            'title' => 'required|string|max:255',
+            'description' => 'sometimes|string|max:500',
+            'url' => 'sometimes|url|nullable',
+            'category' => 'sometimes|string|max:100',
+            'tags' => 'sometimes|array',
+            'order' => 'sometimes|integer',
+        ]);
+
+        $favorite = $request->user()->favorites()->create($validated);
 
         return response()->json([
-            'success' => true,
-            'data' => $favorites,
-        ]);
+            'message' => 'Favorite added successfully',
+            'favorite' => $favorite
+        ], 201);
     }
 
     /**
@@ -265,29 +208,21 @@ class ProfileController extends Controller
     {
         $favorite = $request->user()->favorites()->findOrFail($id);
 
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'type' => 'sometimes|in:course,tutorial,blog,tool,resource',
             'title' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'url' => 'nullable|url',
-            'category' => 'nullable|string|max:100',
-            'tags' => 'nullable|array',
-            'order' => 'nullable|integer',
+            'description' => 'sometimes|string|max:500',
+            'url' => 'sometimes|url|nullable',
+            'category' => 'sometimes|string|max:100',
+            'tags' => 'sometimes|array',
+            'order' => 'sometimes|integer',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $favorite->update($request->all());
+        $favorite->update($validated);
 
         return response()->json([
-            'success' => true,
             'message' => 'Favorite updated successfully',
-            'data' => $favorite,
+            'favorite' => $favorite
         ]);
     }
 
@@ -300,58 +235,31 @@ class ProfileController extends Controller
         $favorite->delete();
 
         return response()->json([
-            'success' => true,
-            'message' => 'Favorite deleted successfully',
+            'message' => 'Favorite deleted successfully'
         ]);
     }
 
     /**
-     * Track user activity (daily)
+     * Track activity
      */
     public function trackActivity(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'minutes_active' => 'required|integer|min:0',
-            'lessons_completed' => 'nullable|integer|min:0',
-            'exercises_completed' => 'nullable|integer|min:0',
-            'quizzes_completed' => 'nullable|integer|min:0',
-            'blogs_read' => 'nullable|integer|min:0',
-            'comments_posted' => 'nullable|integer|min:0',
-            'code_snippets_created' => 'nullable|integer|min:0',
+            'lessons_completed' => 'sometimes|integer|min:0',
+            'exercises_completed' => 'sometimes|integer|min:0',
+            'quizzes_completed' => 'sometimes|integer|min:0',
+            'blogs_read' => 'sometimes|integer|min:0',
+            'comments_posted' => 'sometimes|integer|min:0',
+            'code_snippets_created' => 'sometimes|integer|min:0',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $user = $request->user();
-        $today = Carbon::today();
-
-        // Update or create today's activity
-        $activity = $user->activities()->updateOrCreate(
-            ['activity_date' => $today],
-            [
-                'minutes_active' => $request->input('minutes_active', 0),
-                'lessons_completed' => $request->input('lessons_completed', 0),
-                'exercises_completed' => $request->input('exercises_completed', 0),
-                'quizzes_completed' => $request->input('quizzes_completed', 0),
-                'blogs_read' => $request->input('blogs_read', 0),
-                'comments_posted' => $request->input('comments_posted', 0),
-                'code_snippets_created' => $request->input('code_snippets_created', 0),
-            ]
-        );
-
-        // Update performance stats
-        $this->updatePerformanceStats($user);
+        $activity = $request->user()->activities()->create($validated);
 
         return response()->json([
-            'success' => true,
             'message' => 'Activity tracked successfully',
-            'data' => $activity,
-        ]);
+            'activity' => $activity
+        ], 201);
     }
 
     /**
@@ -360,184 +268,87 @@ class ProfileController extends Controller
     public function getActivityHistory(Request $request)
     {
         $days = $request->query('days', 30);
-        $startDate = Carbon::now()->subDays($days);
-
+        
         $activities = $request->user()->activities()
-            ->where('activity_date', '>=', $startDate)
-            ->orderBy('activity_date', 'desc')
+            ->where('created_at', '>=', now()->subDays($days))
+            ->orderBy('created_at', 'desc')
             ->get();
 
-        // Calculate summary
-        $summary = [
-            'total_minutes' => $activities->sum('minutes_active'),
-            'total_lessons' => $activities->sum('lessons_completed'),
-            'total_exercises' => $activities->sum('exercises_completed'),
-            'total_quizzes' => $activities->sum('quizzes_completed'),
-            'active_days' => $activities->count(),
-            'average_daily_minutes' => $activities->count() > 0 
-                ? round($activities->sum('minutes_active') / $activities->count(), 2) 
-                : 0,
-        ];
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'activities' => $activities,
-                'summary' => $summary,
-            ],
-        ]);
+        return response()->json($activities);
     }
 
     /**
-     * Get user performance stats
+     * Get performance stats
      */
     public function getPerformance(Request $request)
     {
         $user = $request->user();
-        $performance = $user->performance()->firstOrCreate(
-            ['user_id' => $user->id],
-            ['joined_date' => $user->created_at]
-        );
-
-        return response()->json([
-            'success' => true,
-            'data' => $performance,
-        ]);
-    }
-
-    /**
-     * Update performance stats (internal method)
-     */
-    private function updatePerformanceStats(User $user)
-    {
-        $performance = $user->performance()->firstOrCreate(
-            ['user_id' => $user->id],
-            ['joined_date' => $user->created_at]
-        );
-
-        $totalActivities = $user->activities;
-
-        // Update totals
-        $performance->total_lessons_completed = $totalActivities->sum('lessons_completed');
-        $performance->total_exercises_completed = $totalActivities->sum('exercises_completed');
-        $performance->total_quizzes_completed = $totalActivities->sum('quizzes_completed');
-        $performance->total_hours_learned = round($totalActivities->sum('minutes_active') / 60, 2);
-        $performance->last_active_date = Carbon::today();
-
-        // Calculate streak
-        $this->calculateStreak($user, $performance);
-
-        $performance->save();
-    }
-
-    /**
-     * Calculate learning streak
-     */
-    private function calculateStreak(User $user, UserPerformance $performance)
-    {
-        $activities = $user->activities()
-            ->orderBy('activity_date', 'desc')
-            ->get();
-
-        $currentStreak = 0;
-        $expectedDate = Carbon::today();
-
-        foreach ($activities as $activity) {
-            $activityDate = Carbon::parse($activity->activity_date);
-            if ($activityDate->isSameDay($expectedDate)) {
-                $currentStreak++;
-                $expectedDate = $expectedDate->subDay();
-            } else {
-                break;
-            }
-        }
-
-        $performance->current_streak = $currentStreak;
         
-        if ($currentStreak > $performance->longest_streak) {
-            $performance->longest_streak = $currentStreak;
-        }
+        // Calculate performance metrics
+        $stats = [
+            'total_minutes' => $user->activities()->sum('minutes_active'),
+            'total_lessons' => $user->activities()->sum('lessons_completed'),
+            'total_exercises' => $user->activities()->sum('exercises_completed'),
+            'total_quizzes' => $user->activities()->sum('quizzes_completed'),
+            'badges' => $user->badges ?? [],
+            'current_streak' => $user->current_streak ?? 0,
+            'longest_streak' => $user->longest_streak ?? 0,
+        ];
+
+        return response()->json($stats);
     }
 
     /**
-     * Award badge to user
+     * Award badge
      */
     public function awardBadge(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'badge' => 'required|string|max:100',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         $user = $request->user();
-        $performance = $user->performance()->firstOrCreate(['user_id' => $user->id]);
-
-        $badges = $performance->badges ?? [];
+        $badges = $user->badges ?? [];
         
-        if (!in_array($request->badge, $badges)) {
-            $badges[] = $request->badge;
-            $performance->badges = $badges;
-            $performance->save();
+        if (!in_array($validated['badge'], $badges)) {
+            $badges[] = $validated['badge'];
+            $user->update(['badges' => $badges]);
         }
 
         return response()->json([
-            'success' => true,
             'message' => 'Badge awarded successfully',
-            'data' => [
-                'badges' => $badges,
-            ],
+            'badges' => $badges
         ]);
     }
 
     /**
-     * Get public profile (for other users to view)
+     * Get public profile
      */
     public function getPublicProfile($userId)
     {
-        $user = User::with(['profile', 'performance'])->findOrFail($userId);
+        $user = \App\Models\User::findOrFail($userId);
 
-        // Check if profile is public
-        if ($user->profile && !$user->profile->is_public) {
+        // Only return public information
+        if (!$user->is_public) {
             return response()->json([
-                'success' => false,
-                'message' => 'This profile is private',
+                'message' => 'This profile is private'
             ], 403);
         }
 
         return response()->json([
-            'success' => true,
-            'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'created_at' => $user->created_at,
-                ],
-                'profile' => $user->profile ? [
-                    'username' => $user->profile->username,
-                    'bio' => $user->profile->bio,
-                    'avatar' => $user->profile->avatar,
-                    'location' => $user->profile->location,
-                    'skill_level' => $user->profile->skill_level,
-                    'programming_languages' => $user->profile->programming_languages,
-                    'github_url' => $user->profile->github_url,
-                    'linkedin_url' => $user->profile->linkedin_url,
-                    'twitter_url' => $user->profile->twitter_url,
-                    'portfolio_url' => $user->profile->portfolio_url,
-                ] : null,
-                'performance' => $user->performance ? [
-                    'total_courses_completed' => $user->performance->total_courses_completed,
-                    'total_certificates_earned' => $user->performance->total_certificates_earned,
-                    'current_streak' => $user->performance->current_streak,
-                    'experience_level' => $user->performance->experience_level,
-                    'badges' => $user->performance->badges,
-                ] : null,
-            ],
+            'id' => $user->id,
+            'name' => $user->name,
+            'username' => $user->username,
+            'bio' => $user->bio,
+            'avatar' => $user->avatar,
+            'location' => $user->location,
+            'github_url' => $user->github_url,
+            'linkedin_url' => $user->linkedin_url,
+            'twitter_url' => $user->twitter_url,
+            'portfolio_url' => $user->portfolio_url,
+            'skill_level' => $user->skill_level,
+            'programming_languages' => $user->programming_languages,
+            'badges' => $user->badges,
         ]);
     }
 }

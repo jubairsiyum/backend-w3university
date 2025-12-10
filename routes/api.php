@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -18,41 +17,34 @@ Route::get('/blogs/popular', [BlogController::class, 'popular']);
 Route::get('/blogs/recent', [BlogController::class, 'recent']);
 Route::get('/blogs/{slug}', [BlogController::class, 'show']);
 
+// Public profile
+Route::get('/profiles/{userId}', [ProfileController::class, 'getPublicProfile']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    Route::get('/user', [ProfileController::class, 'show']);
     Route::post('/logout', [AuthController::class, 'logout']);
     
-    // User Profile Routes
-    Route::prefix('profile')->group(function () {
-        // Get full profile
-        Route::get('/', [ProfileController::class, 'show']);
-        
-        // Update profile information
-        Route::put('/basic-info', [ProfileController::class, 'updateBasicInfo']);
-        Route::put('/details', [ProfileController::class, 'updateProfile']);
-        Route::post('/avatar', [ProfileController::class, 'uploadAvatar']);
-        Route::post('/change-password', [ProfileController::class, 'changePassword']);
-        
-        // Favorites management
-        Route::get('/favorites', [ProfileController::class, 'getFavorites']);
-        Route::post('/favorites', [ProfileController::class, 'addFavorite']);
-        Route::put('/favorites/{id}', [ProfileController::class, 'updateFavorite']);
-        Route::delete('/favorites/{id}', [ProfileController::class, 'deleteFavorite']);
-        
-        // Activity tracking
-        Route::post('/activity', [ProfileController::class, 'trackActivity']);
-        Route::get('/activity/history', [ProfileController::class, 'getActivityHistory']);
-        
-        // Performance stats
-        Route::get('/performance', [ProfileController::class, 'getPerformance']);
-        Route::post('/badge', [ProfileController::class, 'awardBadge']);
-    });
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::put('/profile/basic-info', [ProfileController::class, 'updateBasicInfo']);
+    Route::put('/profile/details', [ProfileController::class, 'updateDetails']);
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
     
-    // Public profile view
-    Route::get('/profiles/{userId}', [ProfileController::class, 'getPublicProfile']);
+    // Favorites routes
+    Route::get('/profile/favorites', [ProfileController::class, 'getFavorites']);
+    Route::post('/profile/favorites', [ProfileController::class, 'addFavorite']);
+    Route::put('/profile/favorites/{id}', [ProfileController::class, 'updateFavorite']);
+    Route::delete('/profile/favorites/{id}', [ProfileController::class, 'deleteFavorite']);
+    
+    // Activity routes
+    Route::post('/profile/activity', [ProfileController::class, 'trackActivity']);
+    Route::get('/profile/activity/history', [ProfileController::class, 'getActivityHistory']);
+    
+    // Performance routes
+    Route::get('/profile/performance', [ProfileController::class, 'getPerformance']);
+    Route::post('/profile/badge', [ProfileController::class, 'awardBadge']);
     
     // Protected blog routes (for admin/authors)
     Route::post('/blogs', [BlogController::class, 'store']);

@@ -22,7 +22,26 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        'username',
+        'phone',
+        'bio',
+        'avatar',
+        'github_url',
+        'linkedin_url',
+        'twitter_url',
+        'portfolio_url',
+        'location',
+        'timezone',
+        'date_of_birth',
+        'skill_level',
+        'programming_languages',
+        'interests',
+        'badges',
+        'daily_goal_minutes',
+        'email_notifications',
+        'is_public',
+        'current_streak',
+        'longest_streak',
     ];
 
     /**
@@ -45,39 +64,13 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'date_of_birth' => 'date',
+            'programming_languages' => 'array',
+            'interests' => 'array',
+            'badges' => 'array',
+            'email_notifications' => 'boolean',
+            'is_public' => 'boolean',
         ];
-    }
-
-    /**
-     * Check if the user is an admin.
-     */
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
-    }
-
-    /**
-     * Check if the user is a regular user.
-     */
-    public function isUser(): bool
-    {
-        return $this->role === 'user';
-    }
-
-    /**
-     * Get the user's profile
-     */
-    public function profile()
-    {
-        return $this->hasOne(UserProfile::class);
-    }
-
-    /**
-     * Get the user's performance data
-     */
-    public function performance()
-    {
-        return $this->hasOne(UserPerformance::class);
     }
 
     /**
@@ -85,7 +78,7 @@ class User extends Authenticatable
      */
     public function favorites()
     {
-        return $this->hasMany(UserFavorite::class);
+        return $this->hasMany(\App\Models\Favorite::class);
     }
 
     /**
@@ -93,6 +86,6 @@ class User extends Authenticatable
      */
     public function activities()
     {
-        return $this->hasMany(UserActivity::class);
+        return $this->hasMany(\App\Models\Activity::class);
     }
 }

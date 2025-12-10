@@ -1560,7 +1560,7 @@
 
         <!-- main content -->
         <div class="w3-hero__content">
-            <h1 class="w3-hero__title">Welcome to W3University</h1>
+            <h1 class="w3-hero__title">Welcome to Ekushey Coding</h1>
             <p class="w3-hero__subtitle">Learn. Build. Ship — code that matters.</p>
             <!-- optional CTA -->
             <a target="_blank" href="http://localhost:3000/" class="w3-hero__cta">Explore Courses</a>
