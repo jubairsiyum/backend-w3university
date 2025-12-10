@@ -22,7 +22,7 @@ Route::get('/blogs/{slug}', [BlogController::class, 'show']);
 Route::get('/profiles/{userId}', [ProfileController::class, 'getPublicProfile']);
 
 // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:api')->group(function () {
     Route::get('/user', [ProfileController::class, 'show']);
     Route::post('/logout', [AuthController::class, 'logout']);
     
@@ -54,7 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Admin routes
-Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth:api', 'admin'])->group(function () {
     // Blog management
     Route::get('/blogs', [AdminBlogController::class, 'index']);
     Route::get('/blogs/stats', [AdminBlogController::class, 'stats']);

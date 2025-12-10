@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
         'username',
         'phone',
         'bio',
@@ -87,5 +88,13 @@ class User extends Authenticatable
     public function activities()
     {
         return $this->hasMany(\App\Models\Activity::class);
+    }
+
+    /**
+     * Check if user is an admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }
