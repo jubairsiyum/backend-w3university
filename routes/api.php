@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
