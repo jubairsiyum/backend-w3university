@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Exercise;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -10,49 +11,60 @@ use Illuminate\Validation\Rule;
 class ExerciseController extends Controller
 {
     /**
-     * Display a listing of exercises.
+     * Display a listing of all exercises for admin.
      */
     public function index(Request $request)
     {
         $query = Exercise::query();
 
-        // Filter by status
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        } else {
-            // Default to published exercises for public API
-            $query->published();
+        // Search
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('title_bn', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('problem_statement', 'like', "%{$search}%");
+            });
         }
 
-        // Filter by category
-        if ($request->has('category')) {
-            $query->byCategory($request->category);
+        // Filter by status
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
         }
 
         // Filter by difficulty
         if ($request->has('difficulty')) {
-            $query->byDifficulty($request->difficulty);
+            $query->where('difficulty', $request->difficulty);
         }
 
-        // Search by title
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('title_bn', 'like', "%{$search}%");
-            });
+        // Filter by language
+        if ($request->has('language_id')) {
+            $query->where('language_id', $request->language_id);
         }
 
-        // Sort
-        $sortBy = $request->get('sort_by', 'published_at');
+        // Filter by category
+        if ($request->has('category')) {
+            $query->where('category', $request->category);
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
         $query->orderBy($sortBy, $sortOrder);
 
-        // Paginate
-        $perPage = $request->get('per_page', 10);
-        $exercises = $query->paginate($perPage);
+        $exercises = $query->paginate($request->get('per_page', 15));
 
         return response()->json($exercises);
+    }
+
+    /**
+     * Display the specified exercise.
+     */
+    public function show($id)
+    {
+        $exercise = Exercise::findOrFail($id);
+        return response()->json($exercise);
     }
 
     /**
@@ -93,30 +105,25 @@ class ExerciseController extends Controller
             'language_name_bn' => 'nullable|string|max:255',
             'image_url' => 'nullable|url',
             'slug' => 'nullable|string|unique:exercises,slug',
-            'status' => ['nullable', Rule::in(['draft', 'published', 'archived'])],
+            'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
             'published_at' => 'nullable|date',
         ]);
 
         // Auto-generate slug if not provided
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['title']);
-            
-            // Ensure unique slug
-            $originalSlug = $validated['slug'];
-            $count = 1;
-            while (Exercise::where('slug', $validated['slug'])->exists()) {
-                $validated['slug'] = $originalSlug . '-' . $count;
-                $count++;
-            }
         }
 
-        // Set default status if not provided
-        if (empty($validated['status'])) {
-            $validated['status'] = 'draft';
+        // Ensure unique slug
+        $originalSlug = $validated['slug'];
+        $count = 1;
+        while (Exercise::where('slug', $validated['slug'])->exists()) {
+            $validated['slug'] = $originalSlug . '-' . $count;
+            $count++;
         }
 
         // Set published_at if status is published and not provided
-        if (!empty($validated['status']) && $validated['status'] === 'published' && empty($validated['published_at'])) {
+        if ($validated['status'] === 'published' && empty($validated['published_at'])) {
             $validated['published_at'] = now();
         }
 
@@ -129,24 +136,11 @@ class ExerciseController extends Controller
     }
 
     /**
-     * Display the specified exercise.
-     */
-    public function show($slug)
-    {
-        $exercise = Exercise::where('slug', $slug)->firstOrFail();
-
-        // Increment views
-        $exercise->incrementViews();
-
-        return response()->json($exercise);
-    }
-
-    /**
      * Update the specified exercise.
      */
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
-        $exercise = Exercise::where('slug', $slug)->firstOrFail();
+        $exercise = Exercise::findOrFail($id);
 
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
@@ -181,11 +175,11 @@ class ExerciseController extends Controller
             'language_name_bn' => 'nullable|string|max:255',
             'image_url' => 'nullable|url',
             'slug' => ['nullable', 'string', Rule::unique('exercises', 'slug')->ignore($exercise->id)],
-            'status' => ['nullable', Rule::in(['draft', 'published', 'archived'])],
+            'status' => ['sometimes', 'required', Rule::in(['draft', 'published', 'archived'])],
             'published_at' => 'nullable|date',
         ]);
 
-        // Set published_at if status changes to published
+        // Set published_at if status changes to published and not already set
         if (isset($validated['status']) && $validated['status'] === 'published' && !$exercise->published_at) {
             $validated['published_at'] = now();
         }
@@ -201,9 +195,9 @@ class ExerciseController extends Controller
     /**
      * Remove the specified exercise.
      */
-    public function destroy($slug)
+    public function destroy($id)
     {
-        $exercise = Exercise::where('slug', $slug)->firstOrFail();
+        $exercise = Exercise::findOrFail($id);
         $exercise->delete();
 
         return response()->json([
@@ -212,74 +206,73 @@ class ExerciseController extends Controller
     }
 
     /**
-     * Mark exercise as completed.
+     * Get exercise statistics.
      */
-    public function complete($slug)
+    public function stats()
     {
-        $exercise = Exercise::where('slug', $slug)->firstOrFail();
-        $exercise->incrementCompletions();
+        $stats = [
+            'total' => Exercise::count(),
+            'published' => Exercise::where('status', 'published')->count(),
+            'drafts' => Exercise::where('status', 'draft')->count(),
+            'archived' => Exercise::where('status', 'archived')->count(),
+            'total_views' => Exercise::sum('views'),
+            'total_completions' => Exercise::sum('completions'),
+            'by_difficulty' => [
+                'beginner' => Exercise::where('difficulty', 'Beginner')->count(),
+                'intermediate' => Exercise::where('difficulty', 'Intermediate')->count(),
+                'advanced' => Exercise::where('difficulty', 'Advanced')->count(),
+            ],
+            'by_language' => Exercise::select('language_name', \DB::raw('count(*) as count'))
+                ->whereNotNull('language_name')
+                ->groupBy('language_name')
+                ->get(),
+            'recent_exercises' => Exercise::orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get(['id', 'title', 'difficulty', 'views', 'created_at', 'status']),
+        ];
+
+        return response()->json($stats);
+    }
+
+    /**
+     * Bulk delete exercises.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:exercises,id',
+        ]);
+
+        Exercise::whereIn('id', $validated['ids'])->delete();
 
         return response()->json([
-            'message' => 'Exercise marked as completed',
-            'completions' => $exercise->completions,
+            'message' => 'Exercises deleted successfully',
         ]);
     }
 
     /**
-     * Get all unique categories.
+     * Bulk update exercise status.
      */
-    public function categories()
+    public function bulkUpdateStatus(Request $request)
     {
-        $categories = Exercise::published()
-            ->select('category', 'category_bn')
-            ->distinct()
-            ->get();
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:exercises,id',
+            'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
+        ]);
 
-        return response()->json($categories);
-    }
+        $updates = ['status' => $validated['status']];
+        
+        // Set published_at for published exercises
+        if ($validated['status'] === 'published') {
+            $updates['published_at'] = now();
+        }
 
-    /**
-     * Get popular exercises (by views).
-     */
-    public function popular(Request $request)
-    {
-        $limit = $request->get('limit', 5);
+        Exercise::whereIn('id', $validated['ids'])->update($updates);
 
-        $exercises = Exercise::published()
-            ->orderBy('views', 'desc')
-            ->limit($limit)
-            ->get();
-
-        return response()->json($exercises);
-    }
-
-    /**
-     * Get recent exercises.
-     */
-    public function recent(Request $request)
-    {
-        $limit = $request->get('limit', 5);
-
-        $exercises = Exercise::published()
-            ->orderBy('published_at', 'desc')
-            ->limit($limit)
-            ->get();
-
-        return response()->json($exercises);
-    }
-
-    /**
-     * Get exercises by difficulty.
-     */
-    public function byDifficulty(Request $request, $difficulty)
-    {
-        $perPage = $request->get('per_page', 10);
-
-        $exercises = Exercise::published()
-            ->byDifficulty($difficulty)
-            ->orderBy('published_at', 'desc')
-            ->paginate($perPage);
-
-        return response()->json($exercises);
+        return response()->json([
+            'message' => 'Exercise status updated successfully',
+        ]);
     }
 }

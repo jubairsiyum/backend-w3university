@@ -4,8 +4,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\Admin\ExerciseController as AdminExerciseController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -75,4 +77,14 @@ Route::prefix('admin')->middleware(['auth:api', 'admin'])->group(function () {
     Route::delete('/blogs/{id}', [AdminBlogController::class, 'destroy']);
     Route::post('/blogs/bulk-delete', [AdminBlogController::class, 'bulkDelete']);
     Route::post('/blogs/bulk-update-status', [AdminBlogController::class, 'bulkUpdateStatus']);
+    
+    // Exercise management
+    Route::get('/exercises', [AdminExerciseController::class, 'index']);
+    Route::get('/exercises/stats', [AdminExerciseController::class, 'stats']);
+    Route::get('/exercises/{id}', [AdminExerciseController::class, 'show']);
+    Route::post('/exercises', [AdminExerciseController::class, 'store']);
+    Route::put('/exercises/{id}', [AdminExerciseController::class, 'update']);
+    Route::delete('/exercises/{id}', [AdminExerciseController::class, 'destroy']);
+    Route::post('/exercises/bulk-delete', [AdminExerciseController::class, 'bulkDelete']);
+    Route::post('/exercises/bulk-update-status', [AdminExerciseController::class, 'bulkUpdateStatus']);
 });
