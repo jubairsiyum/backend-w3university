@@ -4,9 +4,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\TutorialController;
+use App\Http\Controllers\Admin\ExerciseController as AdminExerciseController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -24,8 +26,18 @@ Route::get('/tutorials', [TutorialController::class, 'index']);
 Route::get('/tutorials/languages', [TutorialController::class, 'languages']);
 Route::get('/tutorials/{id}', [TutorialController::class, 'show']);
 
-// Public profile
-Route::get('/profiles/{userId}', [ProfileController::class, 'getPublicProfile']);
+// Public tutorial routes
+Route::get('/tutorials', [TutorialController::class, 'index']);
+Route::get('/tutorials/languages', [TutorialController::class, 'languages']);
+Route::get('/tutorials/{id}', [TutorialController::class, 'show']);
+
+// Public exercise routes
+Route::get('/exercises', [ExerciseController::class, 'index']);
+Route::get('/exercises/categories', [ExerciseController::class, 'categories']);
+Route::get('/exercises/popular', [ExerciseController::class, 'popular']);
+Route::get('/exercises/recent', [ExerciseController::class, 'recent']);
+Route::get('/exercises/difficulty/{difficulty}', [ExerciseController::class, 'byDifficulty']);
+Route::get('/exercises/{slug}', [ExerciseController::class, 'show']);
 
 // Protected routes
 Route::middleware('auth:api')->group(function () {
@@ -57,6 +69,12 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/blogs', [BlogController::class, 'store']);
     Route::put('/blogs/{slug}', [BlogController::class, 'update']);
     Route::delete('/blogs/{slug}', [BlogController::class, 'destroy']);
+    
+    // Protected exercise routes (for admin/authors)
+    Route::post('/exercises', [ExerciseController::class, 'store']);
+    Route::put('/exercises/{slug}', [ExerciseController::class, 'update']);
+    Route::delete('/exercises/{slug}', [ExerciseController::class, 'destroy']);
+    Route::post('/exercises/{slug}/complete', [ExerciseController::class, 'complete']);
 });
 
 // Admin routes
@@ -71,6 +89,16 @@ Route::prefix('admin')->middleware(['auth:api', 'admin'])->group(function () {
     Route::post('/blogs/bulk-delete', [AdminBlogController::class, 'bulkDelete']);
     Route::post('/blogs/bulk-update-status', [AdminBlogController::class, 'bulkUpdateStatus']);
     
+    // Exercise management
+    Route::get('/exercises', [AdminExerciseController::class, 'index']);
+    Route::get('/exercises/stats', [AdminExerciseController::class, 'stats']);
+    Route::get('/exercises/{id}', [AdminExerciseController::class, 'show']);
+    Route::post('/exercises', [AdminExerciseController::class, 'store']);
+    Route::put('/exercises/{id}', [AdminExerciseController::class, 'update']);
+    Route::delete('/exercises/{id}', [AdminExerciseController::class, 'destroy']);
+    Route::post('/exercises/bulk-delete', [AdminExerciseController::class, 'bulkDelete']);
+    Route::post('/exercises/bulk-update-status', [AdminExerciseController::class, 'bulkUpdateStatus']);
+    
     // Tutorial management
     Route::get('/tutorials', [TutorialController::class, 'index']);
     Route::get('/tutorials/{id}', [TutorialController::class, 'show']);
@@ -80,3 +108,12 @@ Route::prefix('admin')->middleware(['auth:api', 'admin'])->group(function () {
     Route::post('/tutorials/bulk-delete', [TutorialController::class, 'bulkDelete']);
     Route::post('/tutorials/bulk-update-status', [TutorialController::class, 'bulkUpdateStatus']);
 });
+
+
+// Public exercise routes
+Route::get('/exercises', [ExerciseController::class, 'index']);
+Route::get('/exercises/categories', [ExerciseController::class, 'categories']);
+Route::get('/exercises/popular', [ExerciseController::class, 'popular']);
+Route::get('/exercises/recent', [ExerciseController::class, 'recent']);
+Route::get('/exercises/difficulty/{difficulty}', [ExerciseController::class, 'byDifficulty']);
+Route::get('/exercises/{slug}', [ExerciseController::class, 'show']);
