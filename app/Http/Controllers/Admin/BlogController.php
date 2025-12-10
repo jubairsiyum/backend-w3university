@@ -20,9 +20,9 @@ class BlogController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('title_en', 'like', "%{$search}%")
+                $q->where('title', 'like', "%{$search}%")
                   ->orWhere('title_bn', 'like', "%{$search}%")
-                  ->orWhere('content_en', 'like', "%{$search}%")
+                  ->orWhere('content', 'like', "%{$search}%")
                   ->orWhere('content_bn', 'like', "%{$search}%");
             });
         }
@@ -71,24 +71,39 @@ class BlogController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title_en' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
             'title_bn' => 'required|string|max:255',
-            'content_en' => 'required|string',
+            'content' => 'required|string',
             'content_bn' => 'required|string',
-            'excerpt_en' => 'nullable|string|max:500',
-            'excerpt_bn' => 'nullable|string|max:500',
+            'excerpt' => 'nullable|string',
+            'excerpt_bn' => 'nullable|string',
+            'author' => 'nullable|string|max:255',
+            'author_bn' => 'nullable|string|max:255',
             'category' => 'required|string|max:100',
+            'category_bn' => 'nullable|string|max:100',
             'tags' => 'nullable|array',
-            'featured_image' => 'nullable|url|max:500',
-            'status' => 'required|in:draft,published',
+            'tags_bn' => 'nullable|array',
+            'read_time' => 'nullable|string|max:50',
+            'read_time_bn' => 'nullable|string|max:50',
+            'image_url' => 'nullable|string|max:500',
+            'featured_image' => 'nullable|string|max:500',
+            'status' => 'required|in:draft,published,archived',
             'published_at' => 'nullable|date',
         ]);
 
         $validated['author_id'] = $request->user()->id;
         
+        // Auto-set author name if not provided
+        if (!isset($validated['author'])) {
+            $validated['author'] = $request->user()->name;
+        }
+        if (!isset($validated['author_bn'])) {
+            $validated['author_bn'] = $request->user()->name;
+        }
+        
         // Auto-generate slug if not provided
         if (!isset($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['title_en']);
+            $validated['slug'] = Str::slug($validated['title']);
         }
 
         // Ensure unique slug
@@ -115,22 +130,29 @@ class BlogController extends Controller
         $blog = Blog::findOrFail($id);
 
         $validated = $request->validate([
-            'title_en' => 'sometimes|required|string|max:255',
+            'title' => 'sometimes|required|string|max:255',
             'title_bn' => 'sometimes|required|string|max:255',
-            'content_en' => 'sometimes|required|string',
+            'content' => 'sometimes|required|string',
             'content_bn' => 'sometimes|required|string',
-            'excerpt_en' => 'nullable|string|max:500',
-            'excerpt_bn' => 'nullable|string|max:500',
+            'excerpt' => 'nullable|string',
+            'excerpt_bn' => 'nullable|string',
+            'author' => 'nullable|string|max:255',
+            'author_bn' => 'nullable|string|max:255',
             'category' => 'sometimes|required|string|max:100',
+            'category_bn' => 'nullable|string|max:100',
             'tags' => 'nullable|array',
-            'featured_image' => 'nullable|url|max:500',
-            'status' => 'sometimes|required|in:draft,published',
+            'tags_bn' => 'nullable|array',
+            'read_time' => 'nullable|string|max:50',
+            'read_time_bn' => 'nullable|string|max:50',
+            'image_url' => 'nullable|string|max:500',
+            'featured_image' => 'nullable|string|max:500',
+            'status' => 'sometimes|required|in:draft,published,archived',
             'published_at' => 'nullable|date',
         ]);
 
         // Update slug if title changes
-        if (isset($validated['title_en']) && $validated['title_en'] !== $blog->title_en) {
-            $validated['slug'] = Str::slug($validated['title_en']);
+        if (isset($validated['title']) && $validated['title'] !== $blog->title) {
+            $validated['slug'] = Str::slug($validated['title']);
             
             // Ensure unique slug
             $originalSlug = $validated['slug'];

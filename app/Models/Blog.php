@@ -24,6 +24,7 @@ class Blog extends Model
         'content_bn',
         'author',
         'author_bn',
+        'author_id',
         'category',
         'category_bn',
         'tags',
@@ -31,6 +32,7 @@ class Blog extends Model
         'read_time',
         'read_time_bn',
         'image_url',
+        'featured_image',
         'slug',
         'status',
         'views',
@@ -111,5 +113,13 @@ class Blog extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    /**
+     * Get the author that owns the blog.
+     */
+    public function authorUser()
+    {
+        return $this->belongsTo(User::class, 'author_id');
     }
 }
