@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\TutorialController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -17,6 +18,11 @@ Route::get('/blogs/categories', [BlogController::class, 'categories']);
 Route::get('/blogs/popular', [BlogController::class, 'popular']);
 Route::get('/blogs/recent', [BlogController::class, 'recent']);
 Route::get('/blogs/{slug}', [BlogController::class, 'show']);
+
+// Public tutorial routes
+Route::get('/tutorials', [TutorialController::class, 'index']);
+Route::get('/tutorials/languages', [TutorialController::class, 'languages']);
+Route::get('/tutorials/{id}', [TutorialController::class, 'show']);
 
 // Public profile
 Route::get('/profiles/{userId}', [ProfileController::class, 'getPublicProfile']);
@@ -64,4 +70,13 @@ Route::prefix('admin')->middleware(['auth:api', 'admin'])->group(function () {
     Route::delete('/blogs/{id}', [AdminBlogController::class, 'destroy']);
     Route::post('/blogs/bulk-delete', [AdminBlogController::class, 'bulkDelete']);
     Route::post('/blogs/bulk-update-status', [AdminBlogController::class, 'bulkUpdateStatus']);
+    
+    // Tutorial management
+    Route::get('/tutorials', [TutorialController::class, 'index']);
+    Route::get('/tutorials/{id}', [TutorialController::class, 'show']);
+    Route::post('/tutorials', [TutorialController::class, 'store']);
+    Route::put('/tutorials/{id}', [TutorialController::class, 'update']);
+    Route::delete('/tutorials/{id}', [TutorialController::class, 'destroy']);
+    Route::post('/tutorials/bulk-delete', [TutorialController::class, 'bulkDelete']);
+    Route::post('/tutorials/bulk-update-status', [TutorialController::class, 'bulkUpdateStatus']);
 });
