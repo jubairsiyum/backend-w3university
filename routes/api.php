@@ -56,13 +56,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/blogs', [BlogController::class, 'store']);
     Route::put('/blogs/{slug}', [BlogController::class, 'update']);
     Route::delete('/blogs/{slug}', [BlogController::class, 'destroy']);
-    
-    // Protected tutorial routes (for admin/authors)
-    Route::post('/tutorials', [TutorialController::class, 'store']);
-    Route::put('/tutorials/{id}', [TutorialController::class, 'update']);
-    Route::delete('/tutorials/{id}', [TutorialController::class, 'destroy']);
-    Route::post('/tutorials/bulk-delete', [TutorialController::class, 'bulkDelete']);
-    Route::post('/tutorials/bulk-update-status', [TutorialController::class, 'bulkUpdateStatus']);
 });
 
 // Admin routes
