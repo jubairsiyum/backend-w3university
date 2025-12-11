@@ -72,9 +72,9 @@ class BlogController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'title_bn' => 'required|string|max:255',
+            'title_bn' => 'nullable|string|max:255',
             'content' => 'required|string',
-            'content_bn' => 'required|string',
+            'content_bn' => 'nullable|string',
             'excerpt' => 'nullable|string',
             'excerpt_bn' => 'nullable|string',
             'author' => 'nullable|string|max:255',
@@ -112,6 +112,11 @@ class BlogController extends Controller
         while (Blog::where('slug', $validated['slug'])->exists()) {
             $validated['slug'] = $originalSlug . '-' . $count;
             $count++;
+        }
+
+        // Set published_at if status is published and not already set
+        if ($validated['status'] === 'published' && !isset($validated['published_at'])) {
+            $validated['published_at'] = now();
         }
 
         $blog = Blog::create($validated);
@@ -161,6 +166,11 @@ class BlogController extends Controller
                 $validated['slug'] = $originalSlug . '-' . $count;
                 $count++;
             }
+        }
+
+        // Set published_at if status changes to published and not already set
+        if (isset($validated['status']) && $validated['status'] === 'published' && !$blog->published_at && !isset($validated['published_at'])) {
+            $validated['published_at'] = now();
         }
 
         $blog->update($validated);
